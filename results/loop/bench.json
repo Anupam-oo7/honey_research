@@ -1,0 +1,175 @@
+{
+ "kdf_ms": {
+  "1000": {
+   "median": 0.316,
+   "q1": 0.303,
+   "q3": 0.369
+  },
+  "2000": {
+   "median": 0.626,
+   "q1": 0.589,
+   "q3": 0.725
+  },
+  "100000": {
+   "median": 63.201,
+   "q1": 61.719,
+   "q3": 63.401
+  },
+  "600000": {
+   "median": 448.894,
+   "q1": 433.516,
+   "q3": 476.466
+  }
+ },
+ "schemes": {
+  "card": {
+   "PBE-GCM": {
+    "enc": {
+     "median_us": 2.25,
+     "q1_us": 2.1,
+     "q3_us": 2.4
+    },
+    "dec": {
+     "median_us": 2.02,
+     "q1_us": 1.93,
+     "q3_us": 2.15
+    },
+    "blob_bytes": 60,
+    "msg_bytes": 16
+   },
+   "PBE-CBC": {
+    "enc": {
+     "median_us": 9.5,
+     "q1_us": 7.61,
+     "q3_us": 28.49
+    },
+    "dec": {
+     "median_us": 8.89,
+     "q1_us": 7.16,
+     "q3_us": 28.57
+    },
+    "blob_bytes": 64,
+    "msg_bytes": 16
+   },
+   "PBE-CTR": {
+    "enc": {
+     "median_us": 30.61,
+     "q1_us": 11.76,
+     "q3_us": 32.15
+    },
+    "dec": {
+     "median_us": 10.57,
+     "q1_us": 6.97,
+     "q3_us": 27.13
+    },
+    "blob_bytes": 48,
+    "msg_bytes": 16
+   },
+   "HE-v1": {
+    "enc": {
+     "median_us": 2.41,
+     "q1_us": 2.26,
+     "q3_us": 3.72
+    },
+    "dec": {
+     "median_us": 1.79,
+     "q1_us": 1.41,
+     "q3_us": 2.43
+    },
+    "blob_bytes": 24,
+    "msg_bytes": 16
+   }
+  },
+  "cred": {
+   "PBE-GCM": {
+    "enc": {
+     "median_us": 2.3,
+     "q1_us": 2.14,
+     "q3_us": 2.76
+    },
+    "dec": {
+     "median_us": 2.03,
+     "q1_us": 1.93,
+     "q3_us": 2.25
+    },
+    "blob_bytes": 61,
+    "msg_bytes": 17
+   },
+   "PBE-CBC": {
+    "enc": {
+     "median_us": 8.72,
+     "q1_us": 7.67,
+     "q3_us": 28.32
+    },
+    "dec": {
+     "median_us": 7.93,
+     "q1_us": 7.15,
+     "q3_us": 27.72
+    },
+    "blob_bytes": 64,
+    "msg_bytes": 17
+   },
+   "PBE-CTR": {
+    "enc": {
+     "median_us": 20.38,
+     "q1_us": 7.62,
+     "q3_us": 32.15
+    },
+    "dec": {
+     "median_us": 21.99,
+     "q1_us": 10.88,
+     "q3_us": 32.17
+    },
+    "blob_bytes": 49,
+    "msg_bytes": 17
+   },
+   "HE-v1": {
+    "enc": {
+     "median_us": 3.74,
+     "q1_us": 3.58,
+     "q3_us": 4.31
+    },
+    "dec": {
+     "median_us": 1.28,
+     "q1_us": 1.2,
+     "q3_us": 1.48
+    },
+    "blob_bytes": 24,
+    "msg_bytes": 17
+   }
+  }
+ },
+ "attacker_analysis": {
+  "card": {
+   "feature_extract": {
+    "median_us": 19.82,
+    "q1_us": 11.63,
+    "q3_us": 52.17
+   },
+   "l1_rule": {
+    "median_us": 5.13,
+    "q1_us": 2.72,
+    "q3_us": 5.66
+   },
+   "gb_us_per_row": 4.14
+  },
+  "cred": {
+   "feature_extract": {
+    "median_us": 9.45,
+    "q1_us": 9.04,
+    "q3_us": 40.32
+   },
+   "l1_rule": {
+    "median_us": 2.31,
+    "q1_us": 2.28,
+    "q3_us": 2.66
+   },
+   "gb_us_per_row": 6.29
+  }
+ },
+ "notes": [
+  "encrypt/decrypt exclude KDF (key cached); KDF is reported separately.",
+  "PBE = OpenSSL (C); HE DTE = pure Python: compare shape, not ratio.",
+  "attacker analysis cost is per guess for HE outputs only; PBE needs only the L1 rule."
+ ]
+}

@@ -1,0 +1,52 @@
+{
+ "args": {
+  "seed": 7,
+  "trials": 300,
+  "dict": 500,
+  "iters": 1000,
+  "corpus": 3000,
+  "alpha": 0.5,
+  "workloads": [
+   "card",
+   "cred"
+  ],
+  "out": "results/loop"
+ },
+ "versions": {
+  "python": "3.12.3",
+  "numpy": "2.4.4",
+  "scipy": "1.17.1",
+  "sklearn": "1.8.0"
+ },
+ "source_sha256_16": {
+  "common.py": "6bf6959881067fbd",
+  "pbe.py": "b15f4603311e473f",
+  "honey.py": "00c09351cb31c62c",
+  "groundtruth.py": "e94613b2a6c0a9cc",
+  "features.py": "9b5b2cf59873edef",
+  "analysis.py": "ca3b6ec76d8f60b8",
+  "hemodels.py": "5d24ae75e66c3cfc",
+  "improve.py": "55ec3db80a786914",
+  "loop.py": "100ecf21ec3d91f9"
+ },
+ "output_sha256_16": {
+  "analysis_report.json": "47c5eb55c789f954",
+  "attack_summary.json": "e14289863d1d1ab5",
+  "features_card_v1.csv": "95852158351e7bb6",
+  "features_card_v2.csv": "5aafad4ca1b904db",
+  "features_cred_v1.csv": "a4e4fe1fb220553b",
+  "features_cred_v2.csv": "4bf8cc7e2eee4f6c",
+  "models.json": "7d7fc1c2e3de3727",
+  "run.log": "12b26b78db73df95",
+  "trials.csv": "44c4ecee37ca2f52"
+ },
+ "synthetic": true,
+ "assumptions": [
+  "real data are synthetic generators (groundtruth.py)",
+  "user password is always inside the attacker dictionary",
+  "attacker knows the Zipf(1) password popularity used for L3+prior",
+  "attacker classifier is trained on the same generator it attacks (upper bound)",
+  "PBKDF2 iterations are reduced for simulation speed",
+  "one improvement round (v1 -> v2)"
+ ]
+}

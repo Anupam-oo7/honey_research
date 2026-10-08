@@ -1,0 +1,78 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Offline attack lab: PBE vs Honey Encryption (v1 to v2)</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#eef2f5;--panel:#fff;--ink:#10223a;--mute:#5b6b7e;--line:#d5dde5;--att:#2f6f8f;--ev:#b97d00;--bad:#c0392b;--ok:#2e7d4f;--soft:#f4f7fa;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0e1a2a;--panel:#15263b;--ink:#e6edf5;--mute:#93a4b8;--line:#27405c;--att:#5fb0d3;--ev:#f2b632;--bad:#ff7b6b;--ok:#5fcf8f;--soft:#1b3049}}
+:root[data-theme=dark]{--bg:#0e1a2a;--panel:#15263b;--ink:#e6edf5;--mute:#93a4b8;--line:#27405c;--att:#5fb0d3;--ev:#f2b632;--bad:#ff7b6b;--ok:#5fcf8f;--soft:#1b3049}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 'IBM Plex Sans',system-ui,sans-serif}
+main{max-width:1180px;margin:0 auto;padding:24px 16px 60px}
+h1,h2,h3{font-family:'Bricolage Grotesque',system-ui,sans-serif;margin:0}h1{font-size:clamp(26px,5vw,38px);line-height:1.1}h2{font-size:19px}h3{font-size:16px}
+.mute{color:var(--mute)}.mono,code,pre{font-family:'IBM Plex Mono',monospace;font-size:12.5px}
+section,.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin-top:16px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:none;color:var(--ink);padding:7px 14px;font:inherit;cursor:pointer}.seg button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.btn{border:1px solid var(--ink);background:var(--ink);color:var(--bg);border-radius:8px;padding:8px 14px;font:inherit;cursor:pointer}.btn.o{background:none;color:var(--ink);border-color:var(--line)}.btn:disabled{opacity:.4;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--ev);outline-offset:1px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+label{display:flex;flex-direction:column;gap:3px;font-size:13px;color:var(--mute)}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:7px 8px;width:100%}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}.err{color:var(--bad);margin-top:8px;min-height:1.2em}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,480px),1fr));gap:16px}
+.pa{border-top:4px solid var(--att)}.pe{border-top:4px solid var(--ev)}
+.box{background:var(--soft);border-radius:8px;padding:10px;margin:10px 0;overflow-wrap:anywhere}
+.tw{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:8px}.wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{position:sticky;top:0;background:var(--panel);color:var(--mute);font-weight:500;white-space:nowrap}
+.cand td:last-child{color:var(--ev);font-weight:500}.rj td:last-child{color:var(--mute)}.hit td{background:color-mix(in srgb,var(--ok) 16%,transparent)}.fp td{background:color-mix(in srgb,var(--ev) 12%,transparent)}
+.oc .rj{display:none}.tabs{margin-top:8px}.good{color:var(--ok)}.bad{color:var(--bad)}.bar{height:6px;background:var(--line);border-radius:3px;margin:6px 0}.bar i{display:block;height:100%;background:var(--att);border-radius:3px}
+.cv{position:relative;height:300px}.hide{display:none}
+</style></head><body><main>
+<h1>Offline attack lab</h1>
+<p class="mute" style="max-width:70ch;margin:8px 0 0">Real encryption and a real dictionary attack run in your browser (WebCrypto PBKDF2-SHA256, AES, and a Honey Encryption prototype). The attacker only gets the ciphertext and public information. Ground truth appears only in the evaluation view. HE-v1 is the first decoy model; HE-v2 is the model revised after the attack, analyse, identify, improve loop (see the dashboard for the full experiment).</p>
+<details class="panel" id="wf"><summary>What the analysis found and what changed in HE-v2</summary><div id="wfb"></div></details>
+<div class="tabs seg" id="tabs"><button data-t="sim" aria-pressed="true">Simulator</button><button data-t="exp" aria-pressed="false">Experiment mode</button></div>
+
+<div id="t-sim">
+<section><div class="grid">
+<label>Plaintext<input id="pt" value="4111111111111111" spellcheck="false"></label>
+<label>Example plaintexts<select id="pre"><option value="4111111111111111">Card number</option><option value="alice:Sunshine!">Vault credential (user:password)</option><option value="meet at the east gate at 9pm">Free text (PBE only)</option></select></label>
+<label>Correct password (kept from the attacker)<input id="pw" value="sunshine123" spellcheck="false"></label>
+<label>Scheme<select id="sa"></select></label>
+<label>Compare with<select id="sb"></select></label>
+<label>Also compare with<select id="sc"></select></label>
+<label>Password dictionary<select id="ds"><option>100</option><option>300</option><option selected>1000</option><option>1400</option><option value="custom">Custom list</option></select></label>
+<label>Maximum guesses<input id="mx" type="number" min="1" max="1400" value="300"></label>
+<label>PBKDF2 iterations<select id="it"><option>1000</option><option selected>2000</option><option>10000</option><option>100000</option></select></label>
+<label>Attacker policy<select id="po"><option value="all">Use the whole guess budget</option><option value="first">Stop at first candidate</option></select></label>
+<label>Attacker checks<select id="st"><option value="l1">L1 structural rules only</option><option value="nb" selected>L1 + L3-lite (naive Bayes trained in the analysis stage)</option></select></label>
+</div>
+<label id="cw" class="hide" style="margin-top:10px">Custom dictionary (one password per line, most likely first)<textarea id="cu" rows="4"></textarea></label>
+<div class="row"><button class="btn" id="b-seal">Encrypt and start attack</button><button class="btn o" id="b-step" disabled>Step</button><button class="btn o" id="b-run" disabled>Run</button><button class="btn o" id="b-fin" disabled>Finish</button>
+<label style="flex-direction:row;align-items:center;gap:6px">Speed<input id="spd" type="range" min="0" max="400" value="120" style="width:110px"></label><button class="btn o" id="b-exp">Repeat as experiment</button></div>
+<div class="err" id="msg" role="alert"></div></section>
+<div class="row" id="vw" style="margin-top:16px"><div class="seg"><button data-v="a" aria-pressed="true">Attacker view</button><button data-v="e" aria-pressed="false">Evaluation view (ground truth)</button></div><label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="oc" style="width:auto">Show candidates only</label></div>
+<div class="cols" id="panels"><p class="mute">Choose a scheme and select Encrypt and start attack.</p></div>
+<section id="sumw" class="hide"><h2>Experiment summary</h2><p class="mute">Calculated from this run's ground truth. Distinguishability is the share of wrong guesses the attacker's output checks ruled out (1 means every wrong password is exposed, 0 means none is).</p><div class="wrap" id="sum"></div></section>
+</div>
+
+<div id="t-exp" class="hide">
+<section><div class="grid">
+<label>Workload<select id="xw"><option value="card">Card numbers</option><option value="cred">Vault credentials</option></select></label>
+<label>Dictionary size<select id="xd"><option>100</option><option selected>300</option><option>1000</option><option>1400</option></select></label>
+<label>Maximum guesses<input id="xm" type="number" min="1" max="1400" value="200"></label>
+<label>Trials per scheme<input id="xn" type="number" min="1" max="500" value="20"></label>
+<label>PBKDF2 iterations<select id="xi"><option>1000</option><option selected>2000</option><option>10000</option></select></label>
+<label>Plaintext and password<select id="xs"><option value="r">Random each trial (Zipf-weighted password)</option><option value="s">Use the simulator inputs</option></select></label>
+<label>Attacker checks<select id="xk"><option value="l1">L1 structural rules only</option><option value="nb" selected>L1 + L3-lite (naive Bayes)</option></select></label>
+</div>
+<div class="row" id="xsch"></div>
+<div class="row"><button class="btn" id="x-run">Run experiment</button><button class="btn o" id="x-stop" disabled>Stop</button><button class="btn o" id="x-csv" disabled>Save CSV</button><button class="btn o" id="x-json" disabled>Save JSON</button><button class="btn o" id="x-clr">Clear data</button></div>
+<div class="bar"><i id="xp" style="width:0"></i></div><div class="mute" id="xs2"></div></section>
+<section><h2>Attacker success by candidates verified</h2><div class="cv"><canvas id="xc" role="img" aria-label="Attacker success versus candidates verified"></canvas></div><p class="mute">Success at k: the genuine password is among the attacker's first k candidates. The dashed line is dictionary order with no output analysis.</p></section>
+<section><h2>Per-scheme results</h2><div class="wrap" id="xt"></div></section>
+<section><h2>Trial log</h2><p class="mute">Every trial is stored with its ground truth. Latest 25 shown; the exports contain all.</p><div class="wrap tw" id="xl"></div></section>
+</div>
+</main><script>

@@ -1,0 +1,31 @@
+== workload: card ==
+ [1] attack-surface analysis of HE-v1 (L1/L2/L3)
+ [2] identify weaknesses + [3] modify decoy model
+     changes: ['check digit', 'issuer (BIN) weights']
+ [4] re-run the SAME analysis on HE-v2
+     ablation [luhn only] held-out AUC 0.674
+     ablation [bin_w only] held-out AUC 0.952
+ [5] offline dictionary attack on PBE, HE-v1, HE-v2 (paired trials)
+   card: trial 50/300  [10s]
+   card: trial 100/300  [21s]
+   card: trial 150/300  [31s]
+   card: trial 200/300  [42s]
+   card: trial 250/300  [53s]
+   card: trial 300/300  [63s]
+== workload: cred ==
+ [1] attack-surface analysis of HE-v1 (L1/L2/L3)
+ [2] identify weaknesses + [3] modify decoy model
+     changes: ['capitalisation rate', 'base-word popularity', 'suffix | capitalisation']
+ [4] re-run the SAME analysis on HE-v2
+     ablation [cap only] held-out AUC 0.836
+     ablation [word only] held-out AUC 0.735
+     ablation [suffix only] held-out AUC 0.795
+ [5] offline dictionary attack on PBE, HE-v1, HE-v2 (paired trials)
+   cred: trial 50/300  [10s]
+   cred: trial 100/300  [19s]
+   cred: trial 150/300  [29s]
+   cred: trial 200/300  [41s]
+   cred: trial 250/300  [51s]
+   cred: trial 300/300  [61s]
+card -> held-out AUC fell from 0.962 to 0.503 (change -0.458, 95% CI [-0.474, -0.444] excludes 0): v2 decoys are harder to separate. v2 AUC is not distinguishable from 0.5 at this sample size (CI lower bound 0.489).
+cred -> held-out AUC fell from 0.850 to 0.513 (change -0.337, 95% CI [-0.354, -0.318] excludes 0): v2 decoys are harder to separate. v2 AUC is not distinguishable from 0.5 at this sample size (CI lower bound 0.498).
