@@ -1,8 +1,7 @@
 """HE model specs (JSON-serialisable) and scheme wrappers. HE-v1 is the ORIGINAL implementation (honey.py) with a crude
 first-attempt decoy model; HE-v2 is produced by improve.py from analysis findings. The encryption layer is identical."""
 import copy
-import honey, pbe
-import groundtruth as G
+from models import groundtruth as G, honey, pbe
 
 
 class Scheme:

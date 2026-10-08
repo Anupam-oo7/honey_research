@@ -3,7 +3,7 @@ Inputs: the v1 analysis report (from the attacker's corpus A) and a SEPARATE def
 The held-out test corpus is never touched here."""
 import copy
 from collections import Counter
-import groundtruth as G
+from models import groundtruth as G
 
 CARD_MAP = {"luhn_valid": ["luhn"], "bin_id": ["bin_w"], "first_digit": ["bin_w"]}
 CRED_MAP = {"has_upper": ["cap"], "word_bucket": ["word"], "word_rank": ["word"], "suffix_id": ["suffix"], "sym_suffix": ["suffix"],

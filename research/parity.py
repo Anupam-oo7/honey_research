@@ -1,14 +1,15 @@
 """Cross-implementation test vectors: the browser simulator must reproduce these Python results exactly."""
 import json, random, sys
 import numpy as np
-import groundtruth as G, features as FT, hemodels as HM, analysis as AN
+from models import features as FT, groundtruth as G, hemodels as HM
+from research import analysis as AN
 out = sys.argv[1] if len(sys.argv) > 1 else "results/loop"
 mod = json.load(open(f"{out}/models.json")); rng = random.Random(99); vec = {}
 for wl in ("card", "cred"):
     vec[wl] = {}
     for ver in ("v1", "v2"):
         spec = mod[wl][ver]; h = HM.make(spec); c = h.__self__.c if hasattr(h, "__self__") else None
-        import honey
+        from models import honey
         codec = honey.CardCodec(spec["bins"], spec["bin_w"], spec["luhn"]) if wl == "card" else honey.CredCodec(spec["users"], spec["vocab"], spec["pw_w"])
         seeds = [rng.getrandbits(64) for _ in range(300)]
         dec = [codec.from_ij(*codec.dte.decode(s)) for s in seeds]

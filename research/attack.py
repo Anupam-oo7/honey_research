@@ -6,8 +6,8 @@ import numpy as np
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.metrics import roc_auc_score, accuracy_score
 from sklearn.model_selection import train_test_split
-import common, pbe, honey, reveng
-from common import luhn_ok, luhn_check
+from models import common, honey, pbe, reveng
+from models.common import luhn_ok, luhn_check
 
 ap = argparse.ArgumentParser(); ap.add_argument("--trials", type=int, default=300); ap.add_argument("--dict", type=int, default=1000)
 A = ap.parse_args()

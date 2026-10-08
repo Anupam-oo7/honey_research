@@ -1,10 +1,12 @@
 """ATTACK -> ANALYZE -> IDENTIFY WEAKNESS -> IMPROVE DECOYS -> ATTACK AGAIN.
-Run:  python loop.py --seed 7 --trials 300 --dict 500 --iters 1000 --corpus 3000 --out results/loop
+Run:  python -m research.loop --seed 7 --trials 300 --dict 500 --iters 1000 --corpus 3000 --out results/loop
 Everything below is synthetic/controlled (see groundtruth.py). Nothing is hard-coded: every reported number is computed here."""
 import argparse, csv, hashlib, json, math, os, platform, random, sys, time
+from pathlib import Path
 import numpy as np, scipy, sklearn
 from sklearn.metrics import roc_auc_score
-import common, pbe, groundtruth as G, features as FT, analysis as AN, improve as IM, hemodels as HM
+from models import common, features as FT, groundtruth as G, hemodels as HM, pbe
+from research import analysis as AN, improve as IM
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--seed", type=int, default=7); ap.add_argument("--trials", type=int, default=300)
@@ -160,7 +162,11 @@ def main():
     public = {"bins": G.BINS, "users": G.USERS, "words": G.WORDS, "suf": G.SUF2, "sym": sorted(G.SYM), "vocab": G.CRED_VOCAB}
     for name, obj in (("analysis_report", rep), ("attack_summary", summ), ("models", {"public": public, **mod})):
         json.dump(obj, open(f"{args.out}/{name}.json", "w"), indent=1)
-    src = {p: hashlib.sha256(open(p, "rb").read()).hexdigest()[:16] for p in ("common.py", "pbe.py", "honey.py", "groundtruth.py", "features.py", "analysis.py", "hemodels.py", "improve.py", "loop.py")}
+    root = Path(__file__).resolve().parents[1]
+    source_files = ("models/common.py", "models/pbe.py", "models/honey.py", "models/reveng.py", "models/groundtruth.py",
+                    "models/features.py", "models/hemodels.py", "research/analysis.py", "research/attack.py",
+                    "research/improve.py", "research/loop.py")
+    src = {p: hashlib.sha256((root / p).read_bytes()).hexdigest()[:16] for p in source_files}
     outs = {p: hashlib.sha256(open(f"{args.out}/{p}", "rb").read()).hexdigest()[:16] for p in sorted(os.listdir(args.out)) if p != "manifest.json" and p != "bench.json"}
     json.dump({"args": vars(args), "versions": {"python": platform.python_version(), "numpy": np.__version__, "scipy": scipy.__version__, "sklearn": sklearn.__version__},
                "source_sha256_16": src, "output_sha256_16": outs, "synthetic": True,
@@ -171,4 +177,5 @@ def main():
     for wl in args.workloads: print(wl, "->", rep[wl]["verdict"]["text"])
 
 
-main()
+if __name__ == "__main__":
+    main()

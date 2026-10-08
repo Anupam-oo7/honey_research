@@ -1,6 +1,6 @@
 """Assemble the browser simulator's model bundle from the experiment outputs (never edited by hand)."""
 import json, sys
-import groundtruth as G
+from models import groundtruth as G
 out = sys.argv[1] if len(sys.argv) > 1 else "results/loop"
 m = json.load(open(f"{out}/models.json")); rep = json.load(open(f"{out}/analysis_report.json"))
 for wl in rep:

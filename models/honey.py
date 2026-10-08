@@ -2,7 +2,7 @@
 Ciphertext = salt(16) | (seed XOR PBKDF2(pw,salt)[:8]); any password decrypts to *some* seed -> decode -> plausible message."""
 import bisect
 import random
-from common import kdf, luhn_check
+from models.common import kdf, luhn_check
 
 TOTAL = 1 << 64
 
@@ -34,15 +34,26 @@ class TwoLevelDTE:
         return i, (seed - self.starts[i]) * self.sub // size
 
 
+def _as_text(value):
+    if isinstance(value, bytes):
+        return value.decode("latin1")
+    if isinstance(value, str):
+        return value
+    raise TypeError(f"Expected str or bytes, got {type(value).__name__}")
+
+
 class CardCodec:
     """16-digit card: 6-digit BIN | 9-digit account | Luhn check. luhn=False is the naive 'random digits' encoder."""
 
-    def __init__(self, bins, weights, luhn):
+    def __init__(self, bins, weights=None, luhn=False):
+        if weights is None:
+            weights = [1.0] * len(bins)
         self.bins, self.luhn = bins, luhn
         self.dte = TwoLevelDTE(weights, 10 ** 9 if luhn else 10 ** 10)
 
     def to_ij(self, m):
-        return self.bins.index(m[:6]), int(m[6:15]) if self.luhn else int(m[6:16])
+        s = _as_text(m)
+        return self.bins.index(s[:6]), int(s[6:15]) if self.luhn else int(s[6:16])
 
     def from_ij(self, i, j):
         if self.luhn:
@@ -78,12 +89,15 @@ class CredCodec:
     """'user:password'. Model mode: password drawn from a vocabulary with `weights`. Naive mode: any string of length<=8."""
 
     def __init__(self, users, vocab, weights=None, naive=False):
+        if weights is None:
+            weights = [1.0] * len(vocab)
         self.users, self.vocab, self.naive = users, vocab, naive
         self.idx = {w: i for i, w in enumerate(vocab)}
         self.dte = TwoLevelDTE([1], len(users) * N8) if naive else TwoLevelDTE(weights, len(users))
 
     def to_ij(self, m):
-        u, p = m.split(":", 1)
+        s = _as_text(m)
+        u, p = s.split(":", 1)
         if self.naive:
             return 0, self.users.index(u) * N8 + s2i(p)
         return self.idx[p], self.users.index(u)
@@ -99,10 +113,16 @@ class HoneyEnc:
         self.c = codec
 
     def enc(self, pw, msg, salt):
-        seed = self.c.dte.encode(*self.c.to_ij(msg.decode()))
+        if isinstance(msg, bytes):
+            text = msg.decode("latin1")
+        elif isinstance(msg, str):
+            text = msg
+        else:
+            raise TypeError(f"msg must be str or bytes, got {type(msg).__name__}")
+        seed = self.c.dte.encode(*self.c.to_ij(text))
         pad = int.from_bytes(kdf(pw, salt)[:8], "big")
         return salt + (seed ^ pad).to_bytes(8, "big")
 
     def dec(self, pw, blob):  # never fails: every wrong key yields a plausible-looking message
         seed = int.from_bytes(blob[16:24], "big") ^ int.from_bytes(kdf(pw, blob[:16])[:8], "big")
-        return self.c.from_ij(*self.c.dte.decode(seed)).encode()
+        return self.c.from_ij(*self.c.dte.decode(seed)).encode("latin1")

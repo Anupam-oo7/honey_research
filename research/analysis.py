@@ -5,7 +5,7 @@ from scipy import stats
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.inspection import permutation_importance
 from sklearn.metrics import roc_auc_score, roc_curve
-import features as FT
+from models import features as FT
 
 FLAG_P, FLAG_EFFECT, FLAG_L1_REAL, FLAG_L1_DECOY, FLAG_PERM = 0.01, 0.10, 0.99, 0.95, 0.01
 

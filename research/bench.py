@@ -3,7 +3,8 @@ Reports median and IQR per call after warm-up. KDF cost is measured on its own; 
 CAVEAT: PBE runs in OpenSSL (C) via `cryptography`; HE's DTE is pure Python. Ratios reflect implementation language, not algorithmic cost."""
 import hashlib, json, os, random, sys, time
 import numpy as np
-import common, pbe, groundtruth as G, features as FT, hemodels as HM, analysis as AN
+from models import common, features as FT, groundtruth as G, hemodels as HM, pbe
+from research import analysis as AN
 
 OUT = sys.argv[1] if len(sys.argv) > 1 else "results/loop"
 random.seed(1); pbe.set_rng(random.Random(1).randbytes)

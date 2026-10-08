@@ -1,7 +1,7 @@
 """Synthetic, controlled 'real user' data generators + public lists.
 EVERYTHING here is synthetic: the distributions below are assumptions we chose, not measurements of real users."""
-import common
-from common import luhn_check
+from models import common
+from models.common import luhn_check
 
 BINS = ["411111", "424242", "453201", "510510", "555555", "601100"]
 BIN_W = [40, 25, 12, 10, 8, 5]                     # synthetic issuer mix (real cards)

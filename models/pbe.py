@@ -5,7 +5,7 @@ from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from common import kdf
+from models.common import kdf
 
 _rb = os.urandom  # nonce/IV source; loop.py swaps in a seeded generator for reproducible runs
 

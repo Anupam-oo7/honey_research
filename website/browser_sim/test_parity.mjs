@@ -1,7 +1,8 @@
 import fs from 'fs';
+import {fileURLToPath} from 'node:url';
 const dir=process.argv[2]||'/home/claude/honey_project/results/loop';
 const MODELS=JSON.parse(fs.readFileSync(dir+'/models_bundle.json','utf8')), V=JSON.parse(fs.readFileSync(dir+'/parity_vectors.json','utf8'));
-const f=new Function('MODELS',fs.readFileSync(''+new URL('core.js',import.meta.url).pathname+'','utf8')+';return {buildModel,l1,nbScore,MODELS,seal,newSession,step,metrics,dictionary,randomInstance}');
+const f=new Function('MODELS',fs.readFileSync(fileURLToPath(new URL('core.js',import.meta.url)),'utf8')+';return {buildModel,l1,nbScore,MODELS,seal,newSession,step,metrics,dictionary,randomInstance}');
 const C=f(MODELS);let bad=0,n=0;
 for(const k of ['card','cred'])for(const ver of ['v1','v2']){const v=V[k][ver],m=C.buildModel({klass:k,ver});
  v.seeds.forEach((s,i)=>{n++;if(m.dec(BigInt(s))!==v.decoded[i]){bad++;if(bad<4)console.log('DECODE MISMATCH',k,ver,m.dec(BigInt(s)),v.decoded[i])}});

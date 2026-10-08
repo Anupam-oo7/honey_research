@@ -2,8 +2,8 @@
 L2 = distributional features compared statistically. L3 classifier uses both."""
 import math, re
 from collections import Counter
-from common import luhn_ok
-import groundtruth as G
+from models.common import luhn_ok
+from models import groundtruth as G
 
 CRED_RE = re.compile(r"^[a-z]{3,10}:[\x21-\x7e]{1,16}$")
 CARD_RE = re.compile(r"^[0-9]{16}$")

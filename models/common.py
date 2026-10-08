@@ -24,17 +24,29 @@ def zipf(n, s=1.0):
 _C = {}
 
 
+def _as_bytes(value, name):
+    if isinstance(value, str):
+        return value.encode("utf-8")
+    if isinstance(value, (bytes, bytearray, memoryview)):
+        return bytes(value)
+    raise TypeError(f"{name} must be str or bytes-like, got {type(value).__name__}")
+
+
 def kdf(pw, salt, iters=None):
     iters = iters or ITERS
-    k = (pw, salt, iters)
+    pw_b = _as_bytes(pw, "password")
+    salt_b = _as_bytes(salt, "salt")
+    k = (pw_b, salt_b, iters)
     v = _C.get(k)
     if v is None:
-        v = _C[k] = hashlib.pbkdf2_hmac("sha256", pw.encode(), salt, iters, 32)
+        v = _C[k] = hashlib.pbkdf2_hmac("sha256", pw_b, salt_b, iters, 32)
     return v
 
 
 def luhn_ok(s):
-    if not s.isdigit():
+    if isinstance(s, (bytes, bytearray, memoryview)):
+        s = s.decode("ascii")
+    if not isinstance(s, str) or not s.isdigit():
         return False
     t = 0
     for i, c in enumerate(reversed(s)):
@@ -48,6 +60,8 @@ def luhn_ok(s):
 
 
 def luhn_check(d15):
+    if isinstance(d15, (bytes, bytearray, memoryview)):
+        d15 = d15.decode("ascii")
     for c in "0123456789":
         if luhn_ok(d15 + c):
             return c

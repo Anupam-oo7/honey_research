@@ -6,13 +6,10 @@ All plaintexts and ground truth are synthetic; this project does not use real pa
 
 ## Project layout
 
-- `common.py`, `pbe.py`, `honey.py`, `reveng.py`, `attack.py`: encryption implementations and the original pilot attack.
-- `groundtruth.py`, `features.py`, `analysis.py`, `hemodels.py`, `improve.py`, `loop.py`: synthetic corpus generation and the research pipeline.
-- `bench.py`, `parity.py`: timing and Python/browser consistency checks.
-- `browser_sim/`: browser simulator source and parity test.
-- `build_*.py`: build the browser simulator and dashboard from experiment results.
-- `dashboard.html`, `simulator.html`: generated, ready-to-open browser demos.
-- `results/`: checked-in pilot and experiment outputs. The larger CSV files are generated synthetic data.
+- `models/`: reusable encryption implementations and synthetic ground-truth, feature, and Honey Encryption model code.
+- `research/`: analysis, attack experiments, model-improvement loop, benchmarks, parity checks, and research pipeline entry points.
+- `website/`: a plain-language home dashboard, detailed results and findings, a parameter-editable simulator, and interactive Honey security levels 1 and 2; includes their templates, browser simulator source, and HTML builders.
+- `results/`: checked-in pilot data and experiment outputs. The larger CSV files are generated synthetic data.
 - `run_all.sh`: run the complete experiment and rebuild its outputs.
 
 ## Run the experiment
@@ -29,6 +26,6 @@ Then, from the project root, run the full pipeline in a Bash-compatible shell (f
 bash run_all.sh
 ```
 
-The script uses default settings of 300 trials, a dictionary size of 500, 1,000 attack iterations, and a corpus size of 3,000. It writes experiment data under `results/loop/` and rebuilds `dashboard.html` and `simulator.html`. Set `OUT` or `SEED` to override the output directory or random seed.
+The script uses default settings of 300 trials, a dictionary size of 500, 1,000 attack iterations, and a corpus size of 3,000. It writes experiment data under `results/loop/` and rebuilds the home dashboard, results and findings page, Honey security page, and interactive simulator under `website/`. Set `OUT` or `SEED` to override the output directory or random seed.
 
-To open the checked-in demos without rerunning the experiment, open `dashboard.html` or `simulator.html` in a browser.
+To open the checked-in pages without rerunning the experiment, open `website/dashboard.html`, `website/simulator.html`, `website/comparison.html`, or `website/honey_security.html` in a browser.
