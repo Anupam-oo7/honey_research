@@ -8,7 +8,7 @@ All plaintexts and ground truth are synthetic; this project does not use real pa
 
 - `models/`: reusable encryption implementations and synthetic ground-truth, feature, and Honey Encryption model code.
 - `research/`: analysis, attack experiments, model-improvement loop, benchmarks, parity checks, and research pipeline entry points.
-- `website/`: a plain-language home dashboard, detailed results and findings, a parameter-editable simulator, and interactive Honey security levels 1 and 2; includes their templates, browser simulator source, and HTML builders.
+- `website/`: a plain-language home dashboard, detailed results and findings, a parameter-editable simulator, and interactive Honey security levels 1–3; includes their templates, browser simulator source, and HTML builders.
 - `results/`: checked-in pilot data and experiment outputs. The larger CSV files are generated synthetic data.
 - `run_all.sh`: run the complete experiment and rebuild its outputs.
 

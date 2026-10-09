@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Honey security · Levels 1 and 2</title>
+<title>Honey security · Levels 1–3</title>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
@@ -18,10 +18,11 @@ section{margin-top:16px;padding:19px;border:1px solid var(--line);border-radius:
 @media(max-width:760px){main{padding:16px 12px 44px}.site-nav{align-items:flex-start;flex-direction:column}.nav-links{width:100%;overflow-x:auto}.hero{padding:22px}.section-head{display:block}.tag{display:inline-block;margin-top:8px}.summary{grid-template-columns:1fr}.summary.single{grid-template-columns:1fr}.samples{grid-template-columns:1fr}.chart-wrap{height:260px}}
 </style></head><body><main>
 <nav class="site-nav" aria-label="Main navigation"><a class="brand" href="dashboard.html"><span class="brand-mark">HE</span><span>Honey Lab<small>Research workspace</small></span></a><div class="nav-links"><a href="dashboard.html">Home</a><a href="simulator.html">Simulator</a><a href="comparison.html">Results &amp; findings</a><a href="honey_security.html" aria-current="page">Honey security</a></div></nav>
-<header class="hero"><div class="eyebrow">Honey Encryption · attacker view</div><h1>How could an attacker spot a decoy?</h1><p>Start with basic format checks, then look for patterns across many outputs. Explore these two levels of analysis using separate synthetic examples.</p></header>
+<header class="hero"><div class="eyebrow">Honey Encryption · attacker view</div><h1>How could an attacker spot a decoy?</h1><p>Start with basic format checks, look for patterns across many outputs, then test whether a classifier can tell genuine data from decoys. Explore all three levels using separate synthetic examples.</p></header>
 <div class="toolbar"><b>Choose a synthetic dataset</b><label>Data type<select id="workload"><option value="card">Card numbers</option><option value="cred">Account credentials</option></select></label><label>Decoy version<select id="version"><option value="v1">HE-v1 · initial</option><option value="v2">HE-v2 · revised</option></select></label></div>
 <section><div class="section-head"><div><h2>Level 1 · Basic visual and structural checks</h2><p>Look for obvious problems: wrong length, invalid characters, missing fields, or an impossible format.</p></div><span class="tag">Check one example or view the measured pass rates</span></div><div class="summary" id="l1Summary"></div><div class="two"><div class="card"><h3>Try a sample output</h3><p class="foot">Enter a made-up card number or username:password value. Checks are examples of simple structural clues only.</p><div class="testbox"><input id="sampleInput" autocomplete="off" spellcheck="false" aria-label="Synthetic sample output"><button id="checkSample" type="button">Check format</button></div><div class="feedback" id="feedback" role="status"></div></div><div class="card"><h3>What the basic checks found</h3><div class="rules" id="rules"></div></div></div><div class="samples" id="samples"></div><div class="note">These checks do not prove which output is genuine. They show whether a simple rule can reject more decoys than genuine results in this synthetic experiment.</div></section>
 <section><div class="section-head"><div><h2>Level 2 · Statistical patterns across many outputs</h2><p>Compare character and frequency patterns, or the lengths of outputs. One item may look valid while a group can still reveal a pattern.</p></div><span class="tag">Separate held-out examples</span></div><div class="toolbar" style="margin:8px 0"><label>Pattern to compare<select id="feature"></select></label><div id="similarity" class="tag" aria-live="polite"></div></div><div class="summary single"><article class="stat"><small>Pattern similarity</small><strong id="summarySimilarity">--</strong><span id="summaryPattern">for the selected pattern</span></article></div><div class="chart-card"><h3 id="distributionTitle"></h3><p>Each bar shows the share of examples in that category.</p><div class="chart-wrap"><canvas id="distribution" role="img" aria-label="Distribution of statistical features for genuine examples and decoys"></canvas></div></div><div class="note" id="similarityNote"></div></section>
+<section><div class="section-head"><div><h2>Level 3 · Can a classifier tell the difference?</h2><p>A machine-learning classifier is trained on one set of synthetic examples and tested on held-out examples it has not seen before.</p></div><span class="tag">Held-out classifier test</span></div><div class="summary single"><article class="stat"><small>Classifier AUC</small><strong id="classifierAuc">--</strong><span id="classifierMeaning">0.5 is chance; higher scores mean easier separation</span><small id="classifierInterval"></small></article></div><div class="two"><div class="chart-card"><h3>Classifier separation</h3><p>Higher curves mean more genuine examples can be found at the same false-alarm rate.</p><div class="chart-wrap"><canvas id="classifierRoc" role="img" aria-label="Held-out ROC curve and chance line"></canvas></div></div><div class="chart-card"><h3>Patterns the classifier used</h3><p>Change in AUC when each feature is shuffled; larger drops indicate more useful signals.</p><div class="chart-wrap"><canvas id="classifierImportance" role="img" aria-label="Top feature importance measured by permutation"></canvas></div></div></div><div class="note">This is a statistical test on synthetic data, not proof that an attacker can identify every individual output. AUC near 0.5 is close to chance; performance can change with the data, model, or features.</div></section>
 <p class="foot">All samples, names, card numbers, and passwords on this page are synthetic. Statistical similarity summarizes these generated examples; it is not a claim about real people or real-world security.</p>
 </main><script>
 const DATA=/*DATA*/,$=s=>document.querySelector(s),css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -30,7 +31,8 @@ const descriptions={
  cred:{fmt_ok:'Has a username:password shape and allowed characters',user_known:'Username is in the synthetic example list',pw_parses:'Password matches a listed word and ending pattern'}
 };
 const names={len16:'Correct length',all_digits:'Digits only',luhn_valid:'Valid check digit',bin_known:'Known synthetic prefix',fmt_ok:'Username:password format',user_known:'Known username',pw_parses:'Recognized password pattern'};
-let chart;
+const featureNames={luhn_valid:'Valid check digit',bin_id:'Card prefix',distinct_digits:'Different digits',digit_entropy:'Digit variety',digit_mean:'Average digit',max_digit_count:'Most repeated digit',first_digit:'First digit',pw_len:'Password length',digit_frac:'Digit share',symbol_frac:'Symbol share',has_upper:'Capitalization',word_rank:'Word popularity',suffix_id:'Password ending',cap_x_sym:'Capital + symbol',sym_suffix:'Symbol ending',user_id:'Username group'};
+let chart,rocChart,importanceChart;
 function getData(){return DATA.datasets[$('#workload').value][$('#version').value]}
 function render(){
  const wl=$('#workload').value,version=$('#version').value,data=getData(),report=data.l1;
@@ -43,6 +45,7 @@ function render(){
  $('#feature').innerHTML=opts.map(([id,item])=>`<option value="${id}">${item.label}</option>`).join('');
  if(opts.some(([id])=>id===previous))$('#feature').value=previous;
  drawDistribution();
+ drawClassifier(data.classifier);
  $('#sampleInput').placeholder=wl==='card'?'e.g. 4111111111111111':'e.g. alice:Example123';
  $('#feedback').textContent='';$('#feedback').className='feedback';
 }
@@ -56,6 +59,20 @@ function drawDistribution(){
  $('#similarityNote').textContent=`This score compares how often genuine examples and decoys fall into the same ${feature.label.toLowerCase()} categories. A higher score means this one measured pattern looks more alike; attackers may still combine many clues.`;
  if(chart)chart.destroy();
  chart=new Chart($('#distribution'),{type:'bar',data:{labels:feature.labels,datasets:[{label:'Genuine',data:feature.genuine,backgroundColor:css('--real'),borderRadius:4},{label:'Decoy',data:feature.decoy,backgroundColor:css('--decoy'),borderRadius:4}]},options:{maintainAspectRatio:false,animation:false,scales:{x:{ticks:{color:css('--mute'),maxRotation:0,minRotation:0},grid:{color:css('--line')}},y:{beginAtZero:true,title:{display:true,text:'Share of examples (%)',color:css('--mute')},ticks:{color:css('--mute')},grid:{color:css('--line')}}},plugins:{legend:{labels:{color:css('--ink')}}}}});
+}
+function drawClassifier(classifier){
+ const auc=Number(classifier.auc),ci=classifier.auc_ci;
+ $('#classifierAuc').textContent=auc.toFixed(3);
+ $('#classifierMeaning').textContent=auc<.55?'Close to chance on these held-out examples':'The classifier separates genuine and decoy examples on this test';
+ $('#classifierInterval').textContent=`95% interval: ${ci[0].toFixed(3)}–${ci[1].toFixed(3)}`;
+ if(rocChart)rocChart.destroy();
+ rocChart=new Chart($('#classifierRoc'),{type:'line',data:{datasets:[
+  {label:`Classifier · AUC ${auc.toFixed(3)}`,data:classifier.roc.map(([x,y])=>({x,y})),borderColor:css('--decoy'),backgroundColor:css('--decoy'),pointRadius:0,borderWidth:2.5},
+  {label:'Chance',data:[{x:0,y:0},{x:1,y:1}],borderColor:css('--mute'),borderDash:[6,5],pointRadius:0,borderWidth:1.5}
+ ]},options:{maintainAspectRatio:false,animation:false,scales:{x:{type:'linear',min:0,max:1,title:{display:true,text:'False alarms on decoys',color:css('--mute')},ticks:{color:css('--mute')},grid:{color:css('--line')}},y:{min:0,max:1,title:{display:true,text:'Genuine examples correctly identified',color:css('--mute')},ticks:{color:css('--mute')},grid:{color:css('--line')}}},plugins:{legend:{labels:{color:css('--ink')}}}}});
+ if(importanceChart)importanceChart.destroy();
+ const ranked=classifier.importance.slice(0,8).slice().reverse();
+ importanceChart=new Chart($('#classifierImportance'),{type:'bar',data:{labels:ranked.map(x=>featureNames[x.feature]||x.feature.replaceAll('_',' ')),datasets:[{label:'AUC drop when shuffled',data:ranked.map(x=>x.perm_auc_drop),backgroundColor:css('--decoy'),borderRadius:4}]},options:{indexAxis:'y',maintainAspectRatio:false,animation:false,scales:{x:{beginAtZero:true,title:{display:true,text:'AUC decrease',color:css('--mute')},ticks:{color:css('--mute')},grid:{color:css('--line')}},y:{ticks:{color:css('--mute')},grid:{display:false}}},plugins:{legend:{display:false}}}});
 }
 function escapeHtml(value){return String(value).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function luhn(value){let sum=0,double=false;for(let i=value.length-1;i>=0;i--){let n=Number(value[i]);if(double){n*=2;if(n>9)n-=9}sum+=n;double=!double}return sum%10===0}

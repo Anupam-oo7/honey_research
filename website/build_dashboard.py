@@ -108,6 +108,10 @@ for workload in ("card", "cred"):
             "distributions": distributions,
             "samples": samples,
             "count_per_group": sum(row["label"] == "1" for row in rows),
+            "classifier": {
+                key: report[workload][version]["l3"][key]
+                for key in ("auc", "auc_ci", "roc", "importance")
+            },
         }
 security_template = (site / "honey_security_template.html").read_text(encoding="utf-8")
 (site / "honey_security.html").write_text(security_template.replace("/*DATA*/", json.dumps(security, separators=(",", ":"))), encoding="utf-8")
