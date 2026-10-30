@@ -55,7 +55,7 @@ const KEYS=['run','trial','scheme','workload','dict_size','max_guesses','iterati
 $('#b-exp').onclick=()=>{$('#xs').value='s';document.querySelector('[data-t=exp]').click();$('#xd').value=$('#ds').value==='custom'?'300':$('#ds').value;$('#xm').value=$('#mx').value;$('#xi').value=$('#it').value;$('#xk').value=$('#st').value};
 $('#x-run').onclick=async()=>{const sch=[...document.querySelectorAll('#xsch input:checked')].map(c=>c.value),N=+$('#xn').value,it=+$('#xi').value,max=+$('#xm').value,klass=$('#xw').value,fixed=$('#xs').value==='s',lvl=$('#xk').value;
  if(!sch.length)return;const dict=fixed?getDict():dictionary(+$('#xd').value);runNo++;stopX=false;$('#x-run').disabled=true;$('#x-stop').disabled=false;let err='';
- for(let t=0;t<N&&!stopX&&!err;t++){const pt=fixed?$('#pt').value:randomInstance(klass),pw=fixed?$('#pw').value:dict[zipfPick(dict.length)],salt=rnd(16);   // paired design: same plaintext, password and salt for every scheme in a trial; fresh per trial
+ for(let t=0;t<N&&!stopX&&!err;t++){const pt=fixed?$('#pt').value:randomInstance(klass),pw=fixed?$('#pw').value:(Math.random()*100<+$('#xo').value?'zz'+[...rnd(6)].map(b=>b.toString(16).padStart(2,'0')).join(''):dict[zipfPick(dict.length)]),salt=rnd(16);   // paired design: same plaintext, password and salt for every scheme in a trial; fresh per trial
 
   for(const id of sch){try{const s=newSession(await seal(id,pt,pw,it,salt),dict,max,'all',lvl);while(!s.done)await step(s);const m=metrics(s);
    EXP.push({run:runNo,trial:t+1,scheme:id,workload:classify(pt),dict_size:dict.length,max_guesses:s.max,iterations:it,attacker_level:lvl,plaintext:pt,password:pw,...m})}catch(e){err=e.message;break}}
@@ -77,4 +77,11 @@ function expRender(){$('#x-csv').disabled=$('#x-json').disabled=!EXP.length;
  if(EXP.length)ds.push({label:'Dictionary order only',data:ks.map(x=>avg(EXP.map(r=>+(r.rank>=0&&r.rank<Math.min(x,r.max_guesses))))),borderColor:'#8795a6',backgroundColor:'#8795a6',borderDash:[6,4],borderWidth:2,pointRadius:0});
  if(chart)chart.destroy();chart=new Chart($('#xc'),{type:'line',data:{labels:ks,datasets:ds},options:{maintainAspectRatio:false,animation:false,scales:{y:{min:0,max:1,ticks:{callback:v=>v*100+'%',color:css('--mute')},grid:{color:css('--line')}},x:{title:{display:true,text:'candidates verified (k)',color:css('--mute')},ticks:{color:css('--mute')},grid:{color:css('--line')}}},plugins:{legend:{labels:{color:css('--ink'),boxWidth:14}}}}})}
 expRender();
+(function(){var r=document.documentElement,k='honey-theme',s=null;try{s=localStorage.getItem(k)}catch(e){}
+var dark=s?s==='dark':!!(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);r.dataset.theme=dark?'dark':'light';
+var b=document.createElement('button');b.type='button';b.className='theme-btn';b.setAttribute('aria-label','Toggle dark mode');
+function paint(){b.textContent=r.dataset.theme==='dark'?'\u2600 Light':'\u263E Dark'}paint();
+b.onclick=function(){r.dataset.theme=r.dataset.theme==='dark'?'light':'dark';try{localStorage.setItem(k,r.dataset.theme)}catch(e){}paint();
+try{['render','rebuild','expRender'].forEach(function(f){if(typeof window[f]==='function')window[f]()})}catch(e){}};
+var n=document.querySelector('.nav-links');(n||document.body).appendChild(b)})();
 </script></body></html>

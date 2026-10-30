@@ -21,7 +21,12 @@ home = {
     for workload in ("card", "cred")
 }
 template = (site / "dashboard_template.html").read_text(encoding="utf-8")
-t = template.replace("/*DATA*/", json.dumps(home, separators=(",", ":")))
+args = manifest["args"]
+meta = {"trials": args["trials"], "ood": args["ood"], "shift": args["shift"], "wl": {
+    w: {"mm": report[w]["v2"]["l3_mismatch"]["auc"], "conv": report[w]["convergence"]["converged"], "round2": report[w]["convergence"]["round2_changes"],
+        "pbe_miss": summary[w]["schemes"]["PBE-GCM"]["ood"]["learns_miss_l1"], "he_miss": summary[w]["schemes"]["HE-v2"]["ood"]["learns_miss_l3"]}
+    for w in ("card", "cred")}}
+t = template.replace("/*DATA*/", json.dumps(home, separators=(",", ":"))).replace("/*META*/", json.dumps(meta, separators=(",", ":")))
 output = Path(sys.argv[2]) if len(sys.argv) > 2 else site / "dashboard.html"
 output.write_text(t, encoding="utf-8")
 print("dashboard bytes", len(t))
@@ -31,11 +36,17 @@ for workload in ("card", "cred"):
     schemes = {}
     for name, result in summary[workload]["schemes"].items():
         tier = "l1" if name.startswith("PBE") else "l3p"
-        schemes[name] = {
+        entry = {
             "cand_l1": result["cand_l1"],
             "dist_l1": result["dist_l1"],
             "success": result["success"][tier],
+            "success_in": result["success_in"][tier],
+            "n": result["n"], "n_in": result["n_in"], "n_ood": result["n_ood"],
+            "ood": result.get("ood", {}),
         }
+        if "l3pm" in result["success"]:
+            entry["success_m"] = result["success"]["l3pm"]
+        schemes[name] = entry
     comparison["workloads"][workload] = {
         "report": report[workload],
         "paired": summary[workload]["paired"],

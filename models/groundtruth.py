@@ -58,3 +58,23 @@ def parse_pw(pw):
             if best is None or len(s) > len(SUF2[best[2]]):
                 best = cand
     return best
+
+
+import contextlib, math
+
+
+@contextlib.contextmanager
+def shifted(strength=1.0):
+    """Temporarily perturb the population parameters (issuer mix, capitalisation rate, word Zipf exponent, suffix mix).
+    Used to model an attacker who learned the decoy-vs-real boundary on the WRONG population."""
+    global BIN_W, P_CAP, WORD_W, SUF_W
+    old = (BIN_W, P_CAP, WORD_W, SUF_W)
+    f = [0.6, 1.5, 1.3, 0.8, 1.4, 2.0]
+    BIN_W = [max(0.5, w * (1 + (x - 1) * strength)) for w, x in zip(old[0], f)]
+    P_CAP = min(0.9, old[1] + 0.15 * strength)
+    WORD_W = [1.0 / (i + 1) ** (1 - 0.25 * strength) for i in range(len(WORDS))]
+    SUF_W = {c: [w * (1 + 0.5 * strength * math.sin(k + 1 + c)) for k, w in enumerate(ws)] for c, ws in old[3].items()}
+    try:
+        yield
+    finally:
+        BIN_W, P_CAP, WORD_W, SUF_W = old
